@@ -1,13 +1,18 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>BigType</title>
     <style>
-        * { box-sizing: border-box; }
-        
-        body, html {
+        * {
+            box-sizing: border-box;
+        }
+
+        body,
+        html {
             margin: 0;
             padding: 0;
             height: 100%;
@@ -15,87 +20,117 @@
             background-color: #000;
             color: #fff;
             overflow: hidden;
-            position: fixed; /* Prevents bounce-back scrolling on mobile */
+            font-family: sans-serif;
         }
 
-        #big-type-input {
-            width: 100vw;
-            height: 100vh;
-            padding: 10px;
+        /* The container handles centering */
+        #container {
             display: flex;
             align-items: center;
             justify-content: center;
+            width: 100vw;
+            height: 100vh;
+        }
+
+        #big-type-input {
+            width: 100%;
+            /* Remove height: 100% or max-height here during calculation */
+            padding: 20px;
             text-align: center;
+            border: none;
+            outline: none;
+            font-weight: 900;
+            line-height: 1.1;
             word-wrap: break-word;
             overflow-wrap: break-word;
             white-space: pre-wrap;
-            border: none;
-            outline: none;
-            font-family: sans-serif;
-            font-weight: 900;
-            line-height: 0.9; /* Tighter line height prevents early overflow */
-            text-rendering: optimizeLegibility;
             -webkit-user-modify: read-write-plaintext-only;
         }
 
         [contenteditable]:empty:before {
-            content: "BigType 0.3 - Type here...";
+            content: "Type...";
+            color: #333;
+        }
+
+        #version-tag {
+            position: fixed;
+            bottom: 10px;
+            right: 10px;
+            font-family: monospace;
+            font-size: 10px;
             color: #444;
+            pointer-events: none;
         }
     </style>
 </head>
+
 <body>
 
-    <div id="big-type-input" contenteditable="true" spellcheck="false"></div>
+    <div id="container">
+        <div id="big-type-input" contenteditable="true" spellcheck="false"></div>
+    </div>
+    <div id="version-tag"></div>
 
-<script>
-    const display = document.getElementById('big-type-input');
+    <script>
+        const display = document.getElementById('big-type-input');
+        const versionDisplay = document.getElementById('version-tag');
+        const CURRENT_VERSION = "v1.0.0";
+        versionDisplay.innerText = "BigType " + CURRENT_VERSION;
 
-    function resizeText() {
-        if (!display.innerText.trim()) {
-            display.style.fontSize = "100px";
-            return;
-        }
 
-        let min = 10;
-        let max = 1000; 
-        let optimal = 10;
 
-        // Use visualViewport for mobile keyboard awareness
-        const vh = window.visualViewport ? window.visualViewport.height : window.innerHeight;
-        const vw = window.visualViewport ? window.visualViewport.width : window.innerWidth;
-
-        // Binary search
-        while (min <= max) {
-            const mid = Math.floor((min + max) / 2);
-            display.style.fontSize = mid + 'px';
-
-            // Measure using scrollHeight but compare against the specific viewport
-            // We subtract a small buffer (4px) for mobile rendering rounding errors
-            if (display.scrollHeight <= vh && display.scrollWidth <= vw) {
-                optimal = mid;
-                min = mid + 1;
-            } else {
-                max = mid - 1;
+        function resizeText() {
+            const text = display.innerText.trim();
+            if (!text) {
+                display.style.fontSize = "100px";
+                return;
             }
+
+            // Get the actual available space
+            const vh = (window.visualViewport ? window.visualViewport.height : window.innerHeight);
+            const vw = (window.visualViewport ? window.visualViewport.width : window.innerWidth);
+
+            let min = 10;
+            let max = 2000;
+            let optimal = 10;
+
+            // To measure correctly, the element must be allowed to grow vertically
+            // so we can see when it exceeds 'vh'
+            display.style.height = 'auto';
+            display.style.width = '100%';
+
+            while (min <= max) {
+                let mid = Math.floor((min + max) / 2);
+                display.style.fontSize = mid + 'px';
+
+                // scrollHeight = the height the text WANTS to be
+                // vh = the height the screen ALLOWS
+                if (display.scrollHeight <= vh && display.offsetWidth <= vw) {
+                    optimal = mid;
+                    min = mid + 1;
+                } else {
+                    max = mid - 1;
+                }
+            }
+
+            display.style.fontSize = optimal + 'px';
+
+            // Debugging logs - Open your browser console (F12) to see these
+            console.log(`Final Font: ${optimal}px | Text Height: ${display.scrollHeight}px | Viewport: ${vh}px`);
         }
-        display.style.fontSize = optimal + 'px';
-    }
 
-    display.addEventListener('input', resizeText);
-    window.addEventListener('resize', resizeText);
-    
-    if (window.visualViewport) {
-        window.visualViewport.addEventListener('resize', resizeText);
-        window.visualViewport.addEventListener('scroll', () => {
-            // Keep the text centered when the keyboard pushes the viewport
-            window.scrollTo(0, 0);
-        });
-    }
+        display.addEventListener('input', resizeText);
 
-    // Force initial focus
-    display.focus();
-    resizeText();
-</script>
+        // Listen to all possible resizing events
+        if (window.visualViewport) {
+            window.visualViewport.addEventListener('resize', resizeText);
+        }
+        window.addEventListener('resize', resizeText);
+
+        // Initial focus
+        display.focus();
+        resizeText();
+    </script>
 </body>
+
 </html>
