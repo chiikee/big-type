@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport"
         content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>BigType Debug</title>
+    <title>BigType</title>
     <style>
         * {
             box-sizing: border-box;
@@ -56,29 +56,10 @@
             color: #444;
             pointer-events: none;
         }
-
-        /* NEW: Debug Panel Style */
-        #debug-panel {
-            position: fixed;
-            top: 10px;
-            left: 10px;
-            background: rgba(0, 0, 0, 0.8);
-            border: 1px solid #444;
-            padding: 8px;
-            font-family: monospace;
-            font-size: 10px;
-            color: #0f0;
-            z-index: 1000;
-            pointer-events: none;
-            display: none;
-        }
     </style>
 </head>
 
 <body>
-
-    <div id="debug-panel">Initializing...</div>
-
     <div id="container">
         <div id="big-type-input" contenteditable="true" spellcheck="false"></div>
     </div>
@@ -87,18 +68,8 @@
     <script>
         const display = document.getElementById('big-type-input');
         const versionDisplay = document.getElementById('version-tag');
-        const debugPanel = document.getElementById('debug-panel');
-        const CURRENT_VERSION = "v1.2.2";
+        const CURRENT_VERSION = "v1.2.3";
         versionDisplay.innerText = "BigType " + CURRENT_VERSION;
-
-        function updateDebug(info) {
-            debugPanel.innerHTML = Object.entries(info)
-                .map(([k, v]) => `${k}: ${v}`)
-                .join('<br>');
-        }
-
-        // Helper function to create a pause
-        // const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
         function resizeText() {
             const text = display.innerText.trim();
@@ -117,13 +88,9 @@
             display.style.width = vw + 'px';
             display.style.height = 'auto';
 
-            // Changed to an async-compatible loop
             while (min <= max) {
                 let mid = Math.floor((min + max) / 2);
                 display.style.fontSize = mid + 'px';
-
-                // Brief pause to allow the browser to paint the new font size
-                // await sleep(50);
 
                 if (display.scrollHeight <= (vh + 2) && display.scrollWidth <= (vw + 2)) {
                     optimal = mid;
@@ -132,14 +99,6 @@
                     max = mid - 1;
                 }
 
-                updateDebug({
-                    "Testing_Size": mid + "px",
-                    "Viewport_W": vw,
-                    "Viewport_H": vh,
-                    "Content_W": display.scrollWidth,
-                    "Content_H": display.scrollHeight,
-                    "Optimal_So_Far": optimal + "px"
-                });
             }
 
             display.style.fontSize = optimal + 'px';
